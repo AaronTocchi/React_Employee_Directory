@@ -1,13 +1,12 @@
-import React, { Component } from "react";
+import React, { useState, useEffect} from "react";
 import DataTable from "./DataTable";
 import Nav from "./Nav";
 import API from "../utils/API";
 import "../styles/DataArea.css";
 
-export default class DataArea extends Component {
-  constructor() {
-    super();
-    this.state = {
+function DataArea() {
+  
+   const [userState, setUserState] = useState({
       users: [{}],
       order: "descend",
       filteredUsers: [{}],
@@ -21,18 +20,18 @@ export default class DataArea extends Component {
 
       handleSort: heading => {
 
-        if (this.state.order === "descend") {
-          this.setState({
+        if (userState.order === "descend") {
+          setUserState({...userState,
             order: "ascend"
           })
         } else {
-          this.setState({
+          setUserState({...userState,
             order: "descend"
           })
         }
 
         const compareFnc = (a, b) => {
-          if (this.state.order === "ascend") {
+          if (userState.order === "ascend") {
             // account for missing values
             if (a[heading] === undefined) {
               return 1;
@@ -61,45 +60,46 @@ export default class DataArea extends Component {
           }
 
         }
-        const sortedUsers = this.state.filteredUsers.sort(compareFnc);
-        this.setState({ filteredUsers: sortedUsers });
+        const sortedUsers = userState.filteredUsers.sort(compareFnc);
+        setUserState({ ...userState, filteredUsers: sortedUsers });
       },
+
       handleSearchChange: event => {
         console.log(event.target.value);
         const filter = event.target.value;
-        const filteredList = this.state.users.filter(item => {
+        const filteredList = userState.users.filter(item => {
           // merge data together, then see if user input is anywhere inside
           let values = Object.values(item)
             .join("")
             .toLowerCase();
           return values.indexOf(filter.toLowerCase()) !== -1;
         });
-        this.setState({ filteredUsers: filteredList });
+        setUserState({...userState, filteredUsers: filteredList });
       }
-    };
-  }
+    });
+  
 
-  componentDidMount() {
+ useEffect(() => {
     API.getUsers().then(results => {
-      this.setState({
+      setUserState({...userState,
         users: results.data.results,
         filteredUsers: results.data.results
       });
     });
-  }
+  },[]);
 
-  render() {
     return (
       <>
-        <Nav handleSearchChange={this.state.handleSearchChange} />
+        <Nav handleSearchChange={userState.handleSearchChange} />
         <div className="data-area">
           <DataTable
-            headings={this.state.headings}
-            users={this.state.filteredUsers}
-            handleSort={this.state.handleSort}
+            headings={userState.headings}
+            users={userState.filteredUsers}
+            handleSort={userState.handleSort}
           />
         </div>
       </>
     );
-  }
+  
 }
+export default DataArea
